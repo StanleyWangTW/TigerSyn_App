@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-center">MRI Image</h1>
+
+<div class="container text-center">
+  <div class="row">
+    <div class="col">
+      <h3>Sagittal</h3>
+      <img src="{{ url_for('static', filename='sagittal.jpg') }}" class="img-thumbnail" alt="sagittal">
+    </div>
+    <div class="col">
+      <h3>Coronal</h3>
+      <img src="{{ url_for('static', filename='axial.jpg') }}" class="img-thumbnail" alt="axial">
+    </div>
+    <div class="col">
+      <h3>Axial</h3>
+      <img src="{{ url_for('static', filename='coronal.jpg') }}" class="img-thumbnail" alt="coronal">
+    </div>
+  </div>
+</div>
+{% endblock %}

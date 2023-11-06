@@ -1,18 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
-</head>
-<body>
-  <h1>Upload File</h1>
-  <form method="POST" enctype="multipart/form-data">
-    {{form.hidden_tag()}}
-    {{form.file()}}
-    {{form.submit()}}
-  </form>
-  <h1>Image</h1>
-  <img src="{{ url_for('static', filename='sagittal.jpg') }}" alt="Sagittal Plane">
-  <img src="{{ url_for('static', filename='axial.jpg') }}" alt="Axial Plane">
-  <img src="{{ url_for('static', filename='coronal.jpg') }}" alt="Coronal Plane">
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<!--
+<form method="POST" enctype="multipart/form-data">
+  <input type="file"  accept=".nii.gz,.nii" name="file">
+  <input type="submit" value="上傳檔案">
+</form>
+-->
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="formFile" class="form-label">請上傳大腦MRI影像(.nii/.nii.gz)</label>
+    <input class="form-control" type="file" id="formFile" name="file" accept=".nii.gz,.nii">
+  </div>
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary">上傳</button>
+  </div>
+</form>
+{% endblock %}
