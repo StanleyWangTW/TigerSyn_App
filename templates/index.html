@@ -10,5 +10,9 @@
     {{form.file()}}
     {{form.submit()}}
   </form>
+  <h1>Image</h1>
+  <img src="{{ url_for('static', filename='sagittal.jpg') }}" alt="Sagittal Plane">
+  <img src="{{ url_for('static', filename='axial.jpg') }}" alt="Axial Plane">
+  <img src="{{ url_for('static', filename='coronal.jpg') }}" alt="Coronal Plane">
 </body>
 </html>
