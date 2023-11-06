@@ -4,6 +4,9 @@ from wtforms import FileField, SubmitField
 from werkzeug.utils import secure_filename
 import os
 
+if not os.path.isdir('files'):
+    os.mkdir('files')
+    
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'key'
 app.config['UPLOAD_FOLDER'] = 'files'
