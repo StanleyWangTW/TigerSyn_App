@@ -55,6 +55,30 @@ def home():
             return redirect('/display')
     else:
         return render_template('index.html')
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        patient_id = request.form['patient_id']
+        session['patient_id'] = patient_id
+        return redirect(url_for('user', patient_id=patient_id))
+    else:
+        if 'patient_id' in session:
+            return redirect(url_for('user', patient_id=session['patient_id']))
+        
+        return render_template('login.html')
+    
+@app.route('/patient/<patient_id>')
+def user(patient_id):
+    if 'patient_id' in session:
+        return render_template('display.html')
+    else:
+        return redirect(url_for('home'))
+    
+@app.route('/logout')
+def logout():
+    session.pop('patient_id', None)
+    return redirect(url_for('login'))
 
 
 @app.route("/display", methods=['GET', 'POST'])
