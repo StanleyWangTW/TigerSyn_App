@@ -9,6 +9,8 @@ import onnxruntime as ort
 import cv2
 def turnDataToInputData(file_path):
     origin = nib.load(file_path)
+    global copy_header
+    copy_header = origin.header.copy()
     origin = reorder_img(origin, resample="continuous")
     data = origin.get_fdata()
     data = np.expand_dims(data, axis=0)
@@ -38,7 +40,8 @@ if not os.path.isdir('uploads'):
     os.mkdir('uploads')
 if not os.path.isdir('static'):
     os.mkdir('static')
-
+if not os.path.isdir('download'):
+    os.mkdir('download')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
 @app.route('/')
@@ -116,5 +119,13 @@ def slider():
     coronal_data = np.rot90(output[0, 0, :, y, :])
     cv2.imwrite(r'static\output_coronal.jpg', to_grayscale(coronal_data))
     return render_template('output.html', error=f"{file.filename}上傳成功")
+
+@app.route('/download', methods=['GET'])
+def download():
+    pred_img = nib.nifti1.Nifti1Image(output.squeeze(), None, header=copy_header)
+    nib.save(pred_img, os.path.join('download', model+"_"+file.filename))
+    return render_template('output.html', error=f"{file.filename}上傳成功")
+
+
 if __name__ == '__main__':
     app.run()
