@@ -43,7 +43,7 @@ if not os.path.isdir('static'):
 if not os.path.isdir('download'):
     os.mkdir('download')
 app.config['UPLOAD_FOLDER'] = 'uploads'
-
+print('dsfdsgdsf')
 @app.route('/')
 def index():
     return render_template('upload.html')
