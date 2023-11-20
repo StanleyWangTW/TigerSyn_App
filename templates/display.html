@@ -1,44 +1,15 @@
 {% extends "upload.html" %}
 
 {% block show_image %}
-  <form method="POST" enctype="multipart/form-data">
-    <div class="mb-3">
-      <label for="formFile" class="form-label">請上傳大腦MRI影像(.nii/.nii.gz)</label>
-      <input class="form-control" type="file" id="formFile" name="file" accept=".nii.gz,.nii">
-    </div>
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">上傳</button>
-    </div>
-  </form>
+
 
   <h1 class="text-center">{{ raw_img_fname }}</h1>
   <p></p>
   <h1 class="text-center">MRI Image</h1>
 
-  <div class="container text-center">
-    <div class="row">
-      <div class="col">
-        <h3>Sagittal</h3>
-        <img src="{{ url_for('static', filename='sagittal.jpg') }}" class="img-thumbnail" alt="sagittal">
-        <label class="form-label" for="customRange1"></label>
-        <input type="range" class="form-range" id="customRange1">
-      </div>
-      <div class="col">
-        <h3>Coronal</h3>
-        <img src="{{ url_for('static', filename='coronal.jpg') }}" class="img-thumbnail" alt="axial">
-        <input type="range" class="form-range" id="customRange1">
-      </div>
-      <div class="col">
-        <h3>Axial</h3>
-        <img src="{{ url_for('static', filename='axial.jpg') }}" class="img-thumbnail" alt="coronal">
-        <input type="range" class="form-range" id="customRange1">
-      </div>
-    </div>
-  </div>
-
   <hr>
 
-  <form method="POST" class="img-thumbnail">
+  <form method="POST"  class="img-thumbnail">
     <h3>選擇執行的模型：</h3>
     <div class="form-check">
       <input class="form-check-input" type="radio" name="seg_model" id="flexRadioDefault1" value="SynthSeg" checked>
@@ -60,23 +31,3 @@
 {% endblock %}
 
 
-
-{% block script1 %}
-<script>
-  var slider = document.getElementById("customRange1");
-  slider.oninput = function sendData() { 
-      var value = this.value; 
-      $.ajax({ 
-          url: '/display', 
-          type: 'POST', 
-          data: {
-            sag: value
-          }, 
-          success: function(response) { 
-          }, 
-          error: function(error) { 
-          } 
-      }); 
-  } 
-</script>
-{% endblock %}
