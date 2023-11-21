@@ -1,0 +1,8 @@
+flask
+flask-sqlalchemy
+nibabel
+nilearn
+numpy
+matplotlib
+opencv-python
+tigersyn
