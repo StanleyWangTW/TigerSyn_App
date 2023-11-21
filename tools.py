@@ -46,7 +46,7 @@ def view1image(path1):
     img1 = image.load_img(nii_file1)
     view = plotting.view_img(img1, black_bg=True, colorbar=False, bg_img=False)
     html_content = view.get_iframe()
-    html = f'<br><html><body>{html_content}</body></html>'
+    html = f'<br><div style="display: flex; justify-content: center;"><div><html><body>{html_content}</body></html>'
     return render_template_string(html)
 
 def view2image(path1, path2):
