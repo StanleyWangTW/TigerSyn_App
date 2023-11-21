@@ -1,5 +1,6 @@
 flask
 flask-sqlalchemy
+Werkzeug==2.2.2
 nibabel
 nilearn
 numpy
