@@ -6,7 +6,7 @@ import tigersyn
 import numpy as np
 import matplotlib
 import cv2
-
+from tigersyn.brainage.utils  import get_volumes
 from tools import *
 
 matplotlib.use('agg')
@@ -97,7 +97,7 @@ def show(patient_id):
   <p></p>
   <h1 class="text-center">MRI Image</h1>
 '''
-            html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
+            html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
             html3 = '''
   <hr>
   <form method="POST" class="img-thumbnail">
@@ -132,8 +132,10 @@ def segmentation(patient_id):
         print("SynthSeg")
         tigersyn.run('s', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
 
-        brain_age = 10  #brain_age
-        brain_size = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]  #each size of label
+        brain_age = tigersyn.predict_age(os.path.join('static', 'image_syn.nii.gz')) #brain_age
+        brain_age = int(round(brain_age, 0))
+        brain_size = get_volumes(os.path.join('static', 'image_syn.nii.gz'),labels)  #each size of label
+        brain_size = (np.rint(brain_size)).astype(int)
         brain_sameAgeRange_size = get_All_label_brain_sameAgeRange_size()    #load label average size data
         brain_age_range = get_brain_age_range(brain_age) #  decision which age class   0~5 x座標index
 
@@ -142,12 +144,13 @@ def segmentation(patient_id):
         {{% extends "upload.html" %}}
     
         {{% block show_image %}}
-    
+<div class="wrap">
+    <div class="left">
           <h1 class="text-center">{raw_img_fname}</h1>
           <p></p>
           <h1 class="text-center">MRI Image</h1>
         '''
-        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
+        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
         html3 = '''
           <hr>
           <form method="POST" class="img-thumbnail">
@@ -169,9 +172,13 @@ def segmentation(patient_id):
             </div>
           </form>
         '''
-        html4 = view1image(os.path.join('static', 'image_syn.nii.gz'))
+        html4 = view1image(os.path.join('static', 'image_syn.nii.gz'),True)
         html5 = f'''
-<head>
+
+
+      
+    </div>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 引入Chart.js库 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -192,79 +199,80 @@ def segmentation(patient_id):
             margin-right: 20px;
         }}
         .orange-circle, .blue-circle, .red-circle {{
-            width: 20px;
-            height: 20px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            margin-right: 5px;
+            margin-right: 10px;
         }}
         .orange-circle {{
-            background-color: orange;
+            background-color: red;
         }}
         .blue-circle {{
-            background-color: blue;
+            background-color: orange;
         }}
         .red-circle {{
             background-color: red;
         }}
         .legend-text {{
-            font-size: 14px;
+            font-size: 24px;
         }}
 
     </style>
-</head>
 
-<body>
+
+<div class="right">
     <!-- 長條圖顯示的位置 -->
-    <canvas id="myChart" width="800" height="600"></canvas>
+    <canvas id="myChart" width="1200" height="800"></canvas>
     <br>
     <div class="custom-legend">
-        <div class="legend-item">
-            <div class="orange-circle"></div>
-            <div class="legend-text">您的腦齡為{brain_age}</div>
-        </div>
+        
         <div class="legend-item">
             <div class="blue-circle"></div>
-            <div class="legend-text" id="blueText">同年齡層腦組織體積為{brain_sameAgeRange_size[0][brain_age_range]}</div>
+            <div class="legend-text" id="blueText">同年齡層腦組織體積為{brain_sameAgeRange_size[0][brain_age_range]}mm^3</div>
+        </div>
+        <div class="legend-item">
+            <div class="orange-circle"></div>
+            <div class="legend-text">您的腦齡為{brain_age}歲</div>
         </div>
         <div class="legend-item">
             <div class="red-circle"></div>
-            <div class="legend-text" id="redText">你的腦組織體積為{brain_size[0]}</div>
+            <div class="legend-text" id="redText">您的腦組織體積為{brain_size[0]}mm^3</div>
         </div>
     </div>
     <div>
         <label for="dataSelect">選擇組織：</label>
         <select id="dataSelect">
-            <option value="data1">数据集1_2</option>
-            <option value="data2">数据集2_3</option>
-            <option value="data3">数据集3_4</option>
-            <option value="data4">数据集4_5</option>
-            <option value="data5">数据集5_7</option>
-            <option value="data6">数据集6_8</option>
-            <option value="data7">数据集7_10</option>
-            <option value="data8">数据集8_11</option>
-            <option value="data9">数据集9_12</option>
-            <option value="data10">数据集10_13</option>
-            <option value="data11">数据集11_14</option>
-            <option value="data12">数据集12_15</option>
-            <option value="data13">数据集13_16</option>
-            <option value="data14">数据集14_17</option>
-            <option value="data15">数据集15_18</option>
-            <option value="data16">数据集16_26</option>
-            <option value="data17">数据集17_28</option>
-            <option value="data18">数据集18_41</option>
-            <option value="data19">数据集19_42</option>
-            <option value="data20">数据集20_43</option>
-            <option value="data21">数据集21_44</option>
-            <option value="data22">数据集22_46</option>
-            <option value="data23">数据集23_47</option>
-            <option value="data24">数据集24_49</option>
-            <option value="data25">数据集25_50</option>
-            <option value="data26">数据集26_51</option>
-            <option value="data27">数据集27_52</option>
-            <option value="data28">数据集28_53</option>
-            <option value="data29">数据集29_54</option>
-            <option value="data30">数据集30_58</option>
-            <option value="data31">数据集31_60</option>
+            <option value="data1">Left Cerebral WM_2</option>
+            <option value="data2">Left Cerebral Cortex_3</option>
+            <option value="data3">Left Lateral Ventricle_4</option>
+            <option value="data4">Left Inf Lat Vent_5</option>
+            <option value="data5">Left Cerebellum WM_7</option>
+            <option value="data6">Left Cerebellum Cortex_8</option>
+            <option value="data7">Left Thalamus_10</option>
+            <option value="data8">Left Caudate_11</option>
+            <option value="data9">Left Putamen_12</option>
+            <option value="data10">Left Pallidum_13</option>
+            <option value="data11">3rd Ventricle_14</option>
+            <option value="data12">4th Ventricle_15</option>
+            <option value="data13">Brain Stem_16</option>
+            <option value="data14">Left Hippocampus_17</option>
+            <option value="data15">Left Amygdala_18</option>
+            <option value="data16">CSF_26</option>
+            <option value="data17">Left Accumbens area_28</option>
+            <option value="data18">Right Cerebral WM_41</option>
+            <option value="data19">Right Cerebral Cortex_42</option>
+            <option value="data20">Right Lateral Ventricle_43</option>
+            <option value="data21">Right Inf Lat Vent_44</option>
+            <option value="data22">Right Cerebellum WM_46</option>
+            <option value="data23">Right Cerebellum Cortex_47</option>
+            <option value="data24">Right Thalamus_49</option>
+            <option value="data25">Right Caudate_50</option>
+            <option value="data26">Right Putamen_51</option>
+            <option value="data27">Right Pallidum_52</option>
+            <option value="data28">Right Hippocampus_53</option>
+            <option value="data29">Right Amygdala_54</option>
+            <option value="data30">Right Accumbens area_58</option>
+            <option value="data31">Right VentralDC_60</option>
             
         </select>
     </div>
@@ -308,11 +316,24 @@ def segmentation(patient_id):
                 '20-29', '30-39', '40-49', '50-59', '60-69', '70-79'
             ],
             datasets: [{{
-                label: '大腦組織體積',
+                label: '',
                 data: currentData[0], // 默认显示数据集1
+                borderColor: 'blue',
                 pointStyle: 'circle', // 将所有数据点的样式设置为圆圈
                 pointRadius: 5, // 设置数据点的半径大小
                 pointBackgroundColor: [ 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)'],
+            }},
+            {{
+                label: '',
+                data: {get_diagram_point(brain_size,brain_age_range,0)}, // 单独的数据点
+                borderColor: 'transparent ',
+                borderWidth: 0,
+                pointRadius: 8,
+                pointRadius: [0, 0, 0, 0, 0, 0, 0],
+                pointHoverRadius: 10,
+                pointBackgroundColor: 'red', // 单独数据点的颜色
+                pointBorderColor: 'red' // 单独数据点的边框颜色
+                
             }}]
         }};
         const myChart = new Chart(chartElement, {{
@@ -323,159 +344,232 @@ def segmentation(patient_id):
                     x: {{
                         title: {{
                             display: true,
-                            text: 'Age'
+                            text: 'Age',
+                            font: {{
+                                size: 24 
+                            }}
                         }}
                     }},
                     y: {{
                         beginAtZero: true,
                         title: {{
                             display: true,
-                            text: '大腦組織體積(mm^2)'
+                            text: '大腦組織體積(mm^3)',
+                            font: {{
+                                size: 24 
+                            }}
                         }}
                     }}
                 }},
+                plugins: {{
+                    title: {{
+                        display: true,
+                        text: '大腦組織體積',
+                        font: {{
+                            size: 24 // 设置图表标题字体大小
+                        }}
+                    }}
+                }}
             }}
         }});
-
+        
         // 监听选择菜单变化
         document.getElementById('dataSelect').addEventListener('change', function(event) {{
             const selectedValue = event.target.value;
             // 根据选择的值更新当前数据集
             if (selectedValue === 'data1') {{
                 myChart.data.datasets[0].data = currentData[0];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[0][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[0])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,0)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[0][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[0])}mm^3';
             }} else if (selectedValue === 'data2') {{
                 myChart.data.datasets[0].data = currentData[1];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[1][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[1])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,1)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[1][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[1])}mm^3';
             }} else if (selectedValue === 'data3') {{
                 myChart.data.datasets[0].data = currentData[2];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[2][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[2])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,2)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[2][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[2])}mm^3';
             }} else if (selectedValue === 'data4') {{
                 myChart.data.datasets[0].data = currentData[3];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[3][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[3])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,3)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[3][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[3])}mm^3';
             }} else if (selectedValue === 'data5') {{
                 myChart.data.datasets[0].data = currentData[4];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[4][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[3])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,4)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[4][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[3])}mm^3';
             }} else if (selectedValue === 'data6') {{
                 myChart.data.datasets[0].data = currentData[5];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[5][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[5])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,5)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[5][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[5])}mm^3';
             }} else if (selectedValue === 'data7') {{
                 myChart.data.datasets[0].data = currentData[6];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[6][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[6])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,6)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[6][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[6])}mm^3';
             }} else if (selectedValue === 'data8') {{
                 myChart.data.datasets[0].data = currentData[7];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[7][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[7])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,7)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[7][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[7])}mm^3';
             }} else if (selectedValue === 'data9') {{
                 myChart.data.datasets[0].data = currentData[8];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[8][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[8])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,8)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[8][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[8])}mm^3';
             }} else if (selectedValue === 'data10') {{
                 myChart.data.datasets[0].data = currentData[9];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[9][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[9])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,9)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[9][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[9])}mm^3';
             }} else if (selectedValue === 'data11') {{
                 myChart.data.datasets[0].data = currentData[10];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[10][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[10])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,10)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[10][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[10])}mm^3';
             }} else if (selectedValue === 'data12') {{
                 myChart.data.datasets[0].data = currentData[11];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[11][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[11])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,11)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[11][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[11])}mm^3';
             }} else if (selectedValue === 'data13') {{
                 myChart.data.datasets[0].data = currentData[12];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[12][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[12])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,12)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[12][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[12])}mm^3';
             }} else if (selectedValue === 'data14') {{
                 myChart.data.datasets[0].data = currentData[13];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[13][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[13])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,13)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[13][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[13])}mm^3';
             }} else if (selectedValue === 'data15') {{
                 myChart.data.datasets[0].data = currentData[14];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[14][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[14])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,14)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[14][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[14])}mm^3';
             }} else if (selectedValue === 'data16') {{
                 myChart.data.datasets[0].data = currentData[15];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[15][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[15])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,15)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[15][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[15])}mm^3';
             }} else if (selectedValue === 'data17') {{
                 myChart.data.datasets[0].data = currentData[16];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[16][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[16])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,16)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[16][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[16])}mm^3';
             }} else if (selectedValue === 'data18') {{
                 myChart.data.datasets[0].data = currentData[17];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[17][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[17])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,17)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[17][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[17])}mm^3';
             }} else if (selectedValue === 'data19') {{
                 myChart.data.datasets[0].data = currentData[18];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[18][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[18])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,18)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[18][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[18])}mm^3';
             }} else if (selectedValue === 'data20') {{
                 myChart.data.datasets[0].data = currentData[19];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[19][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[19])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,19)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[19][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[19])}mm^3';
             }} else if (selectedValue === 'data21') {{
                 myChart.data.datasets[0].data = currentData[20];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[20][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[20])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,20)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[20][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[20])}mm^3';
             }} else if (selectedValue === 'data22') {{
                 myChart.data.datasets[0].data = currentData[21];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[21][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[21])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,21)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[21][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[21])}mm^3';
             }} else if (selectedValue === 'data23') {{
                 myChart.data.datasets[0].data = currentData[22];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[22][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[22])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,22)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[22][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[22])}mm^3';
             }} else if (selectedValue === 'data24') {{
                 myChart.data.datasets[0].data = currentData[23];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[23][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[23])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,23)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[23][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[23])}mm^3';
             }} else if (selectedValue === 'data25') {{
                 myChart.data.datasets[0].data = currentData[24];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[24][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[24])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,24)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[24][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[24])}mm^3';
             }} else if (selectedValue === 'data26') {{
                 myChart.data.datasets[0].data = currentData[25];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[25][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[25])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,25)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[25][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[25])}mm^3';
             }} else if (selectedValue === 'data27') {{
                 myChart.data.datasets[0].data = currentData[26];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[26][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[26])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,26)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[26][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[26])}mm^3';
             }} else if (selectedValue === 'data28') {{
                 myChart.data.datasets[0].data = currentData[27];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[27][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[27])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,27)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[27][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[27])}mm^3';
             }} else if (selectedValue === 'data29') {{
                 myChart.data.datasets[0].data = currentData[28];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[28][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[28])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,28)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[28][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[28])}mm^3';
             }} else if (selectedValue === 'data30') {{
                 myChart.data.datasets[0].data = currentData[29];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[29][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[29])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,29)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[29][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[29])}mm^3';
             }} else if (selectedValue === 'data31') {{
                 myChart.data.datasets[0].data = currentData[30];
-                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[30][brain_age_range])}';
-                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[30])}';
+                myChart.data.datasets[1].data = {get_diagram_point(brain_size,brain_age_range,30)};
+                document.getElementById('blueText').textContent = '同年齡層腦組織體積為{str(brain_sameAgeRange_size[30][brain_age_range])}mm^3';
+                document.getElementById('redText').textContent = '你的腦組織體積為{str(brain_size[30])}mm^3';
             }}
             // 更新图表显示
             myChart.update();
         }});
-
+        function createSeparateDataPoint(data, index,bar) {{
+            const separateData = Array(6).fill(null);
+            separateData[index] = data[bar];
+            return separateData;
+        }}
         // 指定特定 x 轴索引的数据点变为红色
         const targetIndex = {brain_age_range}; // 指定 x 轴索引（从0开始）
-        myChart.data.datasets[0].pointBackgroundColor[targetIndex] = 'red';
+        myChart.data.datasets[0].pointBackgroundColor[targetIndex] = 'orange';
+        myChart.data.datasets[1].pointRadius[targetIndex] = 10;
         myChart.update();
     </script>
-</body>
+
+
+    </div>
+</div>
+<style>
+  .wrap{{
+    width: 100%;
+    height: 900px;
+    display: flex;
+    justify-content: space-between;
+}}
+.left{{
+    background: white;
+    width: 40%;
+    height: 800px;
+}}
+.right{{
+    background: white;
+    width: 60%;
+    height: 900px;
+}}
+</style>
+
         '''
         html6 = '''
           {% block show_mask %}{% endblock %}
@@ -485,10 +579,11 @@ def segmentation(patient_id):
     #return render_template('segmentation.html', raw_img_fname=session['img_fname'])
     if session['seg_model'] == 'Hippocampus':
         print("Hippocampus")
-        input_data,header = turnDataToInputData(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
-        output = predict("hippo.onnx", input_data, False)
-        save_pred = nib.nifti1.Nifti1Image(output.squeeze(), None, header=header)
-        nib.save(save_pred, os.path.join('static', "hippo.onnx_image.nii.gz"))
+
+        tigersyn.run('h', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
+        brain_size = get_volumes(os.path.join('static', 'image_hippocampus.nii.gz'), [1])  # each size of label
+        brain_size = (np.rint(brain_size)).astype(int)
+
         raw_img_fname = session['img_fname']
         html1 = f'''
                 {{% extends "upload.html" %}}
@@ -500,7 +595,7 @@ def segmentation(patient_id):
                   <p></p>
                   <h1 class="text-center">MRI Image</h1>
                 '''
-        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
+        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
         html3 = '''
                   <hr>
                   <form method="POST" class="img-thumbnail">
@@ -522,10 +617,33 @@ def segmentation(patient_id):
                     </div>
                   </form>
                 '''
-        html4 = view1image(os.path.join('static', "hippo.onnx_image.nii.gz"))
-        html5 = '''
-                  {% block show_mask %}{% endblock %}
-                {% endblock %}            
+        html4 = view1image(os.path.join('static', 'image_hippocampus.nii.gz'),False)#view1image(os.path.join('static', "hippo.onnx_image.nii.gz"))
+        html5 = f'''
+                <style>
+                    .ball {{
+                      width: 20px;
+                      height: 20px;
+                      background-color: red;
+                      border-radius: 50%; /* 使其成為圓形 */
+                      position: relative;
+                    }}
+                    .text {{
+                      position: absolute;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      left: 40px; /* 調整文字與圓球的距離 */
+                      font-size: 24px;
+                      color: black;
+                      white-space: nowrap;
+                    }}
+                </style>
+                <div style="display: flex; justify-content: center;">
+                <div class="ball">
+                    <p class="text">您的海馬迴體積為{str(brain_size[0])}mm^3</p>
+                </div>
+                </div>
+                  {{% block show_mask %}}{{% endblock %}}
+                {{% endblock %}}
                 '''
         return render_template_string(html1 + html2 + html3 + html4 + html5)
 
