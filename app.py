@@ -1,10 +1,12 @@
 import os
-from flask import Flask, render_template, redirect, request, session, url_for
+from flask import Flask, render_template, redirect, url_for, render_template_string
+from flask import request, session
 import tigersyn
 import numpy as np
 import matplotlib
 from tigersyn.brainage.utils import get_volumes
 from tools import *
+import tools
 
 matplotlib.use('agg')
 app = Flask(__name__)
@@ -66,53 +68,18 @@ def logout():
 @app.route("/patient=<patient_id>/show", methods=['GET', 'POST'])
 def show(patient_id):
     if 'img_fname' in session:
-        # img = reorder_img(
-        #    nib.load(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz')),
-        #    resample='nearest').get_fdata()
-
-        # img_save3GrayScale(img, 'static', 'sagittal.jpg', 'axial.jpg', 'coronal.jpg')
 
         if request.method == 'POST':
             session['seg_model'] = request.form.get('seg_model')
             return redirect(url_for('segmentation', patient_id=session['patient_id']))
+
         else:
             raw_img_fname = session['img_fname']
-            html1 = f'''
-{{% extends "upload.html" %}}
+            html2 = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
+                                     False)
 
-{{% block show_image %}}
+            return render_template('display.html', img_fname=raw_img_fname, image_iframe=html2)
 
-
-  <h1 class="text-center">{raw_img_fname}</h1>
-  <p></p>
-  <h1 class="text-center">MRI Image</h1>
-'''
-            html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
-            html3 = '''
-  <hr>
-  <form method="POST" class="img-thumbnail">
-    <h3>選擇執行的模型：</h3>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="seg_model" id="flexRadioDefault1" value="SynthSeg" checked>
-      <label class="form-check-label" for="flexRadioDefault1">
-        SynthSeg
-      </label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="seg_model" id="flexRadioDefault2" value="Hippocampus">
-      <label class="form-check-label" for="flexRadioDefault2">
-        Hippocampus
-      </label>
-    </div>
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">確定分割</button>
-    </div>
-  </form>
-  {% block show_mask %}{% endblock %}
-{% endblock %}            
-'''
-            return render_template_string(html1 + html2 + html3)
-        # return render_template('display.html', raw_img_fname=session['img_fname'])
     else:
         return redirect(url_for('home'))
 
