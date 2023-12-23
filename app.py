@@ -1,11 +1,8 @@
 import os
 from flask import Flask, render_template, redirect, request, session, url_for
-import nibabel as nib
-from nilearn.image import reorder_img
 import tigersyn
 import numpy as np
 import matplotlib
-import cv2
 from tigersyn.brainage.utils import get_volumes
 from tools import *
 
@@ -69,11 +66,11 @@ def logout():
 @app.route("/patient=<patient_id>/show", methods=['GET', 'POST'])
 def show(patient_id):
     if 'img_fname' in session:
-        #img = reorder_img(
+        # img = reorder_img(
         #    nib.load(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz')),
         #    resample='nearest').get_fdata()
 
-        #img_save3GrayScale(img, 'static', 'sagittal.jpg', 'axial.jpg', 'coronal.jpg')
+        # img_save3GrayScale(img, 'static', 'sagittal.jpg', 'axial.jpg', 'coronal.jpg')
 
         if request.method == 'POST':
             session['seg_model'] = request.form.get('seg_model')
