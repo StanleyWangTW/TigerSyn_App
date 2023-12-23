@@ -78,6 +78,7 @@ def show(patient_id):
             html2 = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
                                      False)
 
+            print('display')
             return render_template('display.html', img_fname=raw_img_fname, image_iframe=html2)
 
     else:
@@ -93,13 +94,23 @@ def segmentation(patient_id):
         brain_age = tigersyn.predict_age(os.path.join('static', 'image_syn.nii.gz'))  #brain_age
         brain_age = int(round(brain_age, 0))
         brain_size = get_volumes(os.path.join('static', 'image_syn.nii.gz'),
-                                 labels)  #each size of label
+                                 labels)  # each size of label
         brain_size = (np.rint(brain_size)).astype(int)
         brain_sameAgeRange_size = get_All_label_brain_sameAgeRange_size(
         )  #load label average size data
         brain_age_range = get_brain_age_range(brain_age)  #  decision which age class   0~5 x座標index
 
         raw_img_fname = session['img_fname']
+
+        img_iframe = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
+                                      False)
+        mask_iframe = tools.view1image(os.path.join('static', 'image_syn.nii.gz'), True)
+
+        return render_template('segmentation.html',
+                               img_fname=raw_img_fname,
+                               image_iframe=img_iframe,
+                               mask_iframe=mask_iframe)
+
         html1 = f'''
         {{% extends "upload.html" %}}
     
@@ -536,7 +547,9 @@ def segmentation(patient_id):
         {% endblock %}            
         '''
         return render_template_string(html1 + html2 + html3 + html4 + html5 + html6)
-    #return render_template('segmentation.html', raw_img_fname=session['img_fname'])
+
+    return render_template('segmentation.html', mask_iframe='test')
+
     if session['seg_model'] == 'Hippocampus':
         print("Hippocampus")
 
