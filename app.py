@@ -6,7 +6,7 @@ import tigersyn
 import numpy as np
 import matplotlib
 import cv2
-from tigersyn.brainage.utils  import get_volumes
+from tigersyn.brainage.utils import get_volumes
 from tools import *
 
 matplotlib.use('agg')
@@ -22,26 +22,17 @@ if not os.path.isdir('download'):
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = 'EE304'
 
-# if not os.path.exists('files'):
-#     os.makedirs('files')
-# if not os.path.exists('static'):
-#     os.makedirs('static')
 
-# app = Flask(__name__)
-
-# @app.route("/", methods=['GET', 'POST'])
-# def home():
-#     if request.method == 'POST':
-#         file = request.files['file']
-#         if '.nii' in file.filename:
-#             session['img_fname'] = os.path.basename(file.filename)
-#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
-#             return redirect(url_for('show'))
-    
-#     return render_template('index.html')
-
-@app.route("/", methods=['GET', 'POST'])
+@app.route('/')
 def home():
+    if 'patient_id' in session:
+        return redirect(url_for('upload', patient_id=session['patient_id']))
+    else:
+        return render_template('cover.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
         patient_id = request.form['patient_id']
         session['patient_id'] = patient_id
@@ -51,7 +42,8 @@ def home():
             return redirect(url_for('upload', patient_id=session['patient_id']))
         else:
             return render_template('login.html')
-    
+
+
 @app.route('/patient=<patient_id>', methods=['GET', 'POST'])
 def upload(patient_id):
     if 'patient_id' in session:
@@ -61,12 +53,13 @@ def upload(patient_id):
                 session['img_fname'] = os.path.basename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
                 return redirect(url_for('show', patient_id=session['patient_id']))
-        
+
         return render_template('upload.html')
 
     else:
         return redirect(url_for('home'))
-    
+
+
 @app.route('/logout')
 def logout():
     session.pop('patient_id', None)
@@ -97,7 +90,7 @@ def show(patient_id):
   <p></p>
   <h1 class="text-center">MRI Image</h1>
 '''
-            html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
+            html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
             html3 = '''
   <hr>
   <form method="POST" class="img-thumbnail">
@@ -122,9 +115,10 @@ def show(patient_id):
 {% endblock %}            
 '''
             return render_template_string(html1 + html2 + html3)
-           # return render_template('display.html', raw_img_fname=session['img_fname'])
+        # return render_template('display.html', raw_img_fname=session['img_fname'])
     else:
         return redirect(url_for('home'))
+
 
 @app.route("/patient=<patient_id>/segmentation", methods=['GET', 'POST'])
 def segmentation(patient_id):
@@ -132,12 +126,14 @@ def segmentation(patient_id):
         print("SynthSeg")
         tigersyn.run('s', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
 
-        brain_age = tigersyn.predict_age(os.path.join('static', 'image_syn.nii.gz')) #brain_age
+        brain_age = tigersyn.predict_age(os.path.join('static', 'image_syn.nii.gz'))  #brain_age
         brain_age = int(round(brain_age, 0))
-        brain_size = get_volumes(os.path.join('static', 'image_syn.nii.gz'),labels)  #each size of label
+        brain_size = get_volumes(os.path.join('static', 'image_syn.nii.gz'),
+                                 labels)  #each size of label
         brain_size = (np.rint(brain_size)).astype(int)
-        brain_sameAgeRange_size = get_All_label_brain_sameAgeRange_size()    #load label average size data
-        brain_age_range = get_brain_age_range(brain_age) #  decision which age class   0~5 x座標index
+        brain_sameAgeRange_size = get_All_label_brain_sameAgeRange_size(
+        )  #load label average size data
+        brain_age_range = get_brain_age_range(brain_age)  #  decision which age class   0~5 x座標index
 
         raw_img_fname = session['img_fname']
         html1 = f'''
@@ -150,7 +146,7 @@ def segmentation(patient_id):
           <p></p>
           <h1 class="text-center">MRI Image</h1>
         '''
-        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
+        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
         html3 = '''
           <hr>
           <form method="POST" class="img-thumbnail">
@@ -172,7 +168,7 @@ def segmentation(patient_id):
             </div>
           </form>
         '''
-        html4 = view1image(os.path.join('static', 'image_syn.nii.gz'),True)
+        html4 = view1image(os.path.join('static', 'image_syn.nii.gz'), True)
         html5 = f'''
 
 
@@ -581,7 +577,8 @@ def segmentation(patient_id):
         print("Hippocampus")
 
         tigersyn.run('h', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
-        brain_size = get_volumes(os.path.join('static', 'image_hippocampus.nii.gz'), [1])  # each size of label
+        brain_size = get_volumes(os.path.join('static', 'image_hippocampus.nii.gz'),
+                                 [1])  # each size of label
         brain_size = (np.rint(brain_size)).astype(int)
 
         raw_img_fname = session['img_fname']
@@ -595,7 +592,7 @@ def segmentation(patient_id):
                   <p></p>
                   <h1 class="text-center">MRI Image</h1>
                 '''
-        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),False)
+        html2 = view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
         html3 = '''
                   <hr>
                   <form method="POST" class="img-thumbnail">
@@ -617,7 +614,8 @@ def segmentation(patient_id):
                     </div>
                   </form>
                 '''
-        html4 = view1image(os.path.join('static', 'image_hippocampus.nii.gz'),False)#view1image(os.path.join('static', "hippo.onnx_image.nii.gz"))
+        html4 = view1image(os.path.join('static', 'image_hippocampus.nii.gz'),
+                           False)  #view1image(os.path.join('static', "hippo.onnx_image.nii.gz"))
         html5 = f'''
                 <style>
                     .ball {{
@@ -646,6 +644,7 @@ def segmentation(patient_id):
                 {{% endblock %}}
                 '''
         return render_template_string(html1 + html2 + html3 + html4 + html5)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
