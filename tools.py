@@ -1,11 +1,11 @@
 import os
+import json
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from nilearn import plotting, image
-from flask import render_template_string
-import json
 from matplotlib.colors import ListedColormap
+from nilearn import plotting, image
 from nilearn.plotting.cm import _cmap_d as nilearn_cmaps
 
 labels = [
@@ -100,7 +100,8 @@ def get_All_label_brain_sameAgeRange_size():
                                          [1599, 1602, 1530, 1585, 1628, 1639],
                                          [21344, 21678, 21619, 21645, 20648, 20658],
                                          [4397, 4380, 4340, 4322, 4119, 3978],
-                                         [1542, 1564, 1514, 1510, 1411, 1290], [0, 0, 0, 0, 0, 0],
+                                         [1542, 1564, 1514, 1510, 1411, 1290],
+                                         [1016, 1037, 1003, 962, 1130, 1170],
                                          [440, 410, 383, 378, 342, 327],
                                          [4545, 4456, 4349, 4257, 4072, 4066],
                                          [243409, 249038, 247329, 244231, 229243, 240038],
@@ -212,7 +213,7 @@ options = [{
     "region": "Left Accumbens area"
 }, {
     "num": 28,
-    "region": "Left Accumbens area"
+    "region": "Left VentralDC"
 }, {
     "num": 41,
     "region": "Right Cerebral WM"
