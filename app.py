@@ -53,9 +53,9 @@ def upload():
     return render_template('upload.html')
 
 
-@app.route('/logout')
-def logout():
-    return redirect(url_for('home'))
+@app.route('/performance')
+def performance():
+    return render_template('performance.html')
 
 
 @app.route("/show", methods=['GET', 'POST'])
