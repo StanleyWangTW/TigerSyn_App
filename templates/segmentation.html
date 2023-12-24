@@ -125,8 +125,9 @@ var options = [
   {"num": 16, "region": "Brain Stem"},
   {"num": 17, "region": "Left Hippocampus"},
   {"num": 18, "region": "Left Amygdala"},
-  {"num": 26, "region": "CSF"},
-  {"num": 28, "region": "Left Accumbens area"},
+  {"num": 24, "region": "CSF"},
+  {"num": 26, "region": "Left Accumbens area"},
+  {"num": 28, "region": "Left VentralDC"},
   {"num": 41, "region": "Right Cerebral WM"},
   {"num": 42, "region": "Right Cerebral Cortex"},
   {"num": 43, "region": "Right Lateral Ventricle"},
@@ -145,7 +146,7 @@ var options = [
 
 function get_diagram_point(data, vol_index) {
     var point = [null, null, null, null, null, null]
-    point[data[vol_index].age_range] = data[vol_index].avg_vol[data[vol_index].age_range]
+    point[data[vol_index].age_range] = data[vol_index].vol
 
     console.log(point[data[vol_index].age_range])
     console.log(data[vol_index].age_range)

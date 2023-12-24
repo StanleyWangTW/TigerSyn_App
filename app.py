@@ -93,8 +93,13 @@ def show(patient_id):
 @app.route("/patient=<patient_id>/segmentation", methods=['GET', 'POST'])
 def segmentation(patient_id):
     if session['seg_model'] == 'SynthSeg':
+        raw_img_fname = session['img_fname']
+        img_iframe = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
+                                      False)
         # segmentation
         tigersyn.run('s', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
+        mask_iframe = tools.view1image(os.path.join('static', 'image_syn.nii.gz'), True)
+
         # predict brain age
         brain_age = tigersyn.predict_age(os.path.join('static', 'image_syn.nii.gz'))
         brain_age = int(round(brain_age, 0))
@@ -102,11 +107,6 @@ def segmentation(patient_id):
         brain_size = get_volumes(os.path.join('static', 'image_syn.nii.gz'), labels)
         brain_size = (np.rint(brain_size)).astype(int)
 
-        raw_img_fname = session['img_fname']
-
-        img_iframe = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
-                                      False)
-        mask_iframe = tools.view1image(os.path.join('static', 'image_syn.nii.gz'), True)
         vol_data = tools.age_to_json(brain_age, brain_size)
 
         return render_template('segmentation.html',
@@ -135,97 +135,6 @@ def segmentation(patient_id):
                                mask_iframe=mask_iframe,
                                hippo_vol=hippo_vol)
 
-
-'''
-        .custom-legend {{
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }}
-        .legend-item {{
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }}
-        .orange-circle, .blue-circle, .red-circle {{
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }}
-        .orange-circle {{
-            background-color: red;
-        }}
-        .blue-circle {{
-            background-color: orange;
-        }}
-        .red-circle {{
-            background-color: red;
-        }}
-        .legend-text {{
-            font-size: 24px;
-        }}
-
-    </style>
-
-
-<div class="right">
-    <!-- 長條圖顯示的位置 -->
-    <canvas id="myChart" width="1200" height="800"></canvas>
-    <br>
-    <div class="custom-legend">
-
-        <div class="legend-item">
-            <div class="blue-circle"></div>
-            <div class="legend-text" id="blueText">同年齡層腦組織體積為{brain_sameAgeRange_size[0][brain_age_range]}mm^3</div>
-        </div>
-        <div class="legend-item">
-            <div class="orange-circle"></div>
-            <div class="legend-text">您的腦齡為{brain_age}歲</div>
-        </div>
-        <div class="legend-item">
-            <div class="red-circle"></div>
-            <div class="legend-text" id="redText">您的腦組織體積為{brain_size[0]}mm^3</div>
-        </div>
-    </div>
-
-        const data = {{
-        const myChart = new Chart(chartElement, {{
-            type: 'line',
-            data: data,
-            options: {{
-                scales: {{
-                    x: {{
-                        title: {{
-                            display: true,
-                            text: 'Age',
-                            font: {{
-                                size: 24
-                            }}
-                        }}
-                    }},
-                    y: {{
-                        beginAtZero: true,
-                        title: {{
-                            display: true,
-                            text: '大腦組織體積(mm^3)',
-                            font: {{
-                                size: 24 
-                            }}
-                        }}
-                    }}
-                }},
-                plugins: {{
-                    title: {{
-                        display: true,
-                        text: '大腦組織體積',
-                        font: {{
-                            size: 24 // 设置图表标题字体大小
-                        }}
-                    }}
-                }}
-            }}
-        }});'''
 
 if __name__ == '__main__':
     app.run(debug=True)

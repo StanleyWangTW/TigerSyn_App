@@ -100,8 +100,8 @@ def get_All_label_brain_sameAgeRange_size():
                                          [1599, 1602, 1530, 1585, 1628, 1639],
                                          [21344, 21678, 21619, 21645, 20648, 20658],
                                          [4397, 4380, 4340, 4322, 4119, 3978],
-                                         [1542, 1564, 1514, 1510, 1411, 1290],
-                                         [440, 410, 383, 378, 342, 327], [0, 0, 0, 0, 0, 0],
+                                         [1542, 1564, 1514, 1510, 1411, 1290], [0, 0, 0, 0, 0, 0],
+                                         [440, 410, 383, 378, 342, 327],
                                          [4545, 4456, 4349, 4257, 4072, 4066],
                                          [243409, 249038, 247329, 244231, 229243, 240038],
                                          [229217, 222120, 214963, 205351, 198451, 185551],
@@ -124,7 +124,6 @@ def get_All_label_brain_sameAgeRange_size():
 def age_to_json(age, brain_size):
     sameAgeRange_size = get_All_label_brain_sameAgeRange_size()
     age_range = get_brain_age_range(age)
-    print(age, age_range)
 
     data = list()
     for i in range(len(brain_size)):
@@ -206,8 +205,11 @@ options = [{
     "num": 18,
     "region": "Left Amygdala"
 }, {
-    "num": 26,
+    "num": 24,
     "region": "CSF"
+}, {
+    "num": 26,
+    "region": "Left Accumbens area"
 }, {
     "num": 28,
     "region": "Left Accumbens area"
