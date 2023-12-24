@@ -4,13 +4,14 @@ import cv2
 import matplotlib.pyplot as plt
 from nilearn import plotting, image
 from flask import render_template_string
-from nilearn.image import reorder_img
-import onnxruntime as ort
-import torch
-import torch.nn
-import nibabel as nib
-from matplotlib.colors import LinearSegmentedColormap
+import json
+from matplotlib.colors import ListedColormap
 from nilearn.plotting.cm import _cmap_d as nilearn_cmaps
+
+labels = [
+    0, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 24, 26, 28, 41, 42, 43, 44, 46, 47, 49,
+    50, 51, 52, 53, 54, 58, 60
+]
 
 
 def to_grayscale(img):
@@ -46,62 +47,24 @@ def mask_to_3img(mask, dir, cmap):
 
 
 def view1image(path1, colormap):
-    nii_file1 = path1
-    img1 = image.load_img(nii_file1)
+    img1 = image.load_img(path1)
+
     if colormap:
         view = plotting.view_img(img1,
                                  black_bg=True,
                                  colorbar=False,
                                  bg_img=False,
-                                 cmap=get_cmap(labels))
+                                 symmetric_cmap=False,
+                                 resampling_interpolation='nearest',
+                                 cmap=get_cmap())
     else:
         view = plotting.view_img(img1,
                                  black_bg=True,
                                  colorbar=False,
                                  bg_img=False,
-                                 cmap=nilearn_cmaps["brown_blue"])  #,cmap=plt.cm.get_cmap('gray')
-    html_content = view.get_iframe()
-    html = f'<body><div style="display: flex; justify-content: center;">{html_content}</div></body>'
-    return render_template_string(html)
+                                 cmap=nilearn_cmaps["brown_blue"])  # ,cmap=plt.cm.get_cmap('gray')
 
-
-def view2image(path1, path2):
-    nii_file1 = path1  # 更換為您檔案的路徑
-    nii_file2 = path2
-    img1 = image.load_img(nii_file1)
-    img2 = image.load_img(nii_file2)
-    view = plotting.view_img(img1, black_bg=True, colorbar=False, bg_img=False)
-    view2 = plotting.view_img(img2, black_bg=True, colorbar=False, bg_img=False)
-    html_content = view.get_iframe()
-    html_content2 = view2.get_iframe()
-    html = f'<br><html><body>{html_content}<br>{html_content2}</body></html>'
-    return render_template_string(html)
-
-
-def turnDataToInputData(file_path):
-    origin = nib.load(file_path)
-    copy_header = origin.header.copy()
-    origin = reorder_img(origin, resample="continuous")
-    data = origin.get_fdata()
-    data = np.expand_dims(data, axis=0)
-    data = np.expand_dims(data, axis=0)
-    return data, copy_header
-
-
-def predict(model, data, GPU):
-    """read array-like data, then segmentation"""
-    if GPU and (ort.get_device() == "GPU"):
-        ort_sess = ort.InferenceSession(model, providers=['CUDAExecutionProvider'])
-    else:
-        ort_sess = ort.InferenceSession(model, providers=["CPUExecutionProvider"])
-    data_type = 'float32'
-
-    sigmoid = torch.nn.Sigmoid()
-    out_sig = sigmoid(torch.tensor(ort_sess.run(None, {'input': data.astype(data_type)})[0]))
-    output = out_sig.numpy()
-    output[output > 0.5] = 1
-    output[output <= 0.5] = 0
-    return output
+    return view.get_iframe()
 
 
 def get_brain_age_range(age):
@@ -122,22 +85,6 @@ def get_brain_age_range(age):
     return index
 
 
-def get_diagram_point(vol, index, vol_index):
-    if index == 0:
-        list = [vol[vol_index], 0, 0, 0, 0, 0]
-    if index == 1:
-        list = [0, vol[vol_index], 0, 0, 0, 0]
-    if index == 2:
-        list = [0, 0, vol[vol_index], 0, 0, 0]
-    if index == 3:
-        list = [0, 0, 0, vol[vol_index], 0, 0]
-    if index == 4:
-        list = [0, 0, 0, 0, vol[vol_index], 0]
-    if index == 5:
-        list = [0, 0, 0, 0, 0, vol[vol_index]]
-    return list
-
-
 def get_All_label_brain_sameAgeRange_size():
     All_label_brain_sameAgeRange_size = [[244161, 249064, 248077, 243648, 229577, 240404],
                                          [229271, 222265, 214511, 204848, 198633, 185513],
@@ -153,7 +100,7 @@ def get_All_label_brain_sameAgeRange_size():
                                          [1599, 1602, 1530, 1585, 1628, 1639],
                                          [21344, 21678, 21619, 21645, 20648, 20658],
                                          [4397, 4380, 4340, 4322, 4119, 3978],
-                                         [1542, 1564, 1514, 1510, 1411, 1290],
+                                         [1542, 1564, 1514, 1510, 1411, 1290], [0, 0, 0, 0, 0, 0],
                                          [440, 410, 383, 378, 342, 327],
                                          [4545, 4456, 4349, 4257, 4072, 4066],
                                          [243409, 249038, 247329, 244231, 229243, 240038],
@@ -170,39 +117,142 @@ def get_All_label_brain_sameAgeRange_size():
                                          [1751, 1763, 1703, 1679, 1622, 1507],
                                          [561, 528, 505, 488, 458, 444],
                                          [4531, 4459, 4364, 4270, 4117, 4054]]
+
     return All_label_brain_sameAgeRange_size
 
 
-labels = [
-    2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 26, 28, 41, 42, 43, 44, 46, 47, 49, 50,
-    51, 52, 53, 54, 58, 60
-]
+def age_to_json(age, brain_size):
+    sameAgeRange_size = get_All_label_brain_sameAgeRange_size()
+    age_range = get_brain_age_range(age)
+
+    data = list()
+    for i in range(len(brain_size)):
+        row = dict()
+        row['region'] = labels[i + 1]
+        row['vol'] = brain_size[i].item()
+        row['avg_vol'] = sameAgeRange_size[i]
+        row['age_range'] = age_range
+
+        data.append(row)
+
+    return json.dumps(data, ensure_ascii=False)
 
 
-def get_cmap(labels):
-    colors1 = [[0, 0, 0], [70, 130, 180], [245, 245, 245], [205, 62, 78], [120, 18, 134],
-               [196, 58, 250], [0, 148, 0], [220, 248, 164], [230, 148, 34], [0, 118, 14],
-               [0, 118, 14], [122, 186, 220], [236, 13, 176], [12, 48, 255], [204, 182, 142],
-               [42, 204, 164], [119, 159, 176], [220, 216, 20], [103, 255, 255], [80, 196, 98],
-               [60, 58, 210], [60, 58, 210], [60, 58, 210], [60, 58, 210], [60, 60, 60],
-               [255, 165, 0], [255, 165, 0], [0, 255, 127], [165, 42, 42], [135, 206, 235],
-               [160, 32, 240], [0, 200, 200], [100, 50, 100], [135, 50, 74], [122, 135, 50],
-               [51, 50, 135], [74, 155, 60], [120, 62, 43], [74, 155, 60], [122, 135, 50],
-               [70, 130, 180], [0, 225, 0], [205, 62, 78], [120, 18, 134], [196, 58, 250],
-               [0, 148, 0], [220, 248, 164], [230, 148, 34], [0, 118, 14], [0, 118, 14],
-               [122, 186, 220], [236, 13, 176], [13, 48, 255], [220, 216, 20], [103, 255, 255],
-               [80, 196, 98], [60, 58, 210], [255, 165, 0], [255, 165, 0], [0, 255, 127],
-               [165, 42, 42]]
-    colors = [[245, 245, 245], [205, 62, 78], [120, 18, 134], [196, 58, 250], [220, 248, 164],
-              [230, 148, 34], [0, 118, 14], [122, 186, 220], [236, 13, 176], [12, 48, 255],
-              [204, 182, 142], [42, 204, 164], [119, 159, 176], [220, 216, 20], [103, 255, 255],
-              [255, 165, 0], [165, 42, 42], [0, 225, 0], [205, 62, 78], [120, 18, 134],
-              [196, 58, 250], [220, 248, 164], [230, 148, 34], [0, 118, 14], [122, 186, 220],
-              [236, 13, 176], [13, 48, 255], [220, 216, 20], [103, 255, 255], [255, 165, 0],
-              [165, 42, 42]]
-    colors_normalized = np.array(colors) / 255.0
-    n_colors = len(labels)
-    color_values = np.linspace(0, 1, n_colors)
-    color_list = [(color_values[i], colors_normalized[i]) for i in range(n_colors)]
-    cmap_custom = LinearSegmentedColormap.from_list('custom_cmap', color_list)
-    return cmap_custom
+def get_cmap():
+    # custom cmap for labels plotting
+    rgb_colors = [(0, 0, 0), (245, 245, 245), (205, 62, 78), (120, 18, 134), (196, 58, 250),
+                  (220, 248, 164), (230, 148, 34), (0, 118, 14), (122, 186, 220), (236, 13, 176),
+                  (12, 48, 255), (204, 182, 142), (42, 204, 164), (119, 159, 176), (220, 216, 20),
+                  (103, 255, 255), (60, 60, 60), (255, 165, 0), (165, 42, 42), (245, 245, 245),
+                  (205, 62, 78), (120, 18, 134), (196, 58, 250), (220, 248, 164), (230, 148, 34),
+                  (0, 118, 14), (122, 186, 220), (236, 13, 176), (13, 48, 255), (220, 216, 20),
+                  (103, 255, 255), (255, 165, 0), (165, 42, 42)]
+
+    # Convert RGB colors to the range [0, 1]
+    colors = np.array(rgb_colors) / 255.0
+    colors = np.zeros([labels[-1] + 1, 3])
+    for idx, l in enumerate(labels):
+        colors[l] = rgb_colors[idx]
+        colors[l] /= 255.0
+
+    # Create a ListedColormap
+    return ListedColormap(colors)
+
+
+options = [{
+    "num": 2,
+    "region": "Left Cerebral WM"
+}, {
+    "num": 3,
+    "region": "Left Cerebral Cortex"
+}, {
+    "num": 4,
+    "region": "Left Lateral Ventricle"
+}, {
+    "num": 5,
+    "region": "Left Inf Lat Vent"
+}, {
+    "num": 7,
+    "region": "Left Cerebellum WM"
+}, {
+    "num": 8,
+    "region": "Left Cerebellum Cortex"
+}, {
+    "num": 10,
+    "region": "Left Thalamus"
+}, {
+    "num": 11,
+    "region": "Left Caudate"
+}, {
+    "num": 12,
+    "region": "Left Putamen"
+}, {
+    "num": 13,
+    "region": "Left Pallidum"
+}, {
+    "num": 14,
+    "region": "3rd Ventricle"
+}, {
+    "num": 15,
+    "region": "4th Ventricle"
+}, {
+    "num": 16,
+    "region": "Brain Stem"
+}, {
+    "num": 17,
+    "region": "Left Hippocampus"
+}, {
+    "num": 18,
+    "region": "Left Amygdala"
+}, {
+    "num": 24,
+    "region": "CSF"
+}, {
+    "num": 26,
+    "region": "Left Accumbens area"
+}, {
+    "num": 28,
+    "region": "Left Accumbens area"
+}, {
+    "num": 41,
+    "region": "Right Cerebral WM"
+}, {
+    "num": 42,
+    "region": "Right Cerebral Cortex"
+}, {
+    "num": 43,
+    "region": "Right Lateral Ventricle"
+}, {
+    "num": 44,
+    "region": "Right Inf Lat Vent"
+}, {
+    "num": 46,
+    "region": "Right Cerebellum WM"
+}, {
+    "num": 47,
+    "region": "Right Cerebellum Cortex"
+}, {
+    "num": 49,
+    "region": "Right Thalamus"
+}, {
+    "num": 50,
+    "region": "Right Caudate"
+}, {
+    "num": 51,
+    "region": "Right Putamen"
+}, {
+    "num": 52,
+    "region": "Right Pallidum"
+}, {
+    "num": 53,
+    "region": "Right Hippocampus"
+}, {
+    "num": 54,
+    "region": "Right Amygdala"
+}, {
+    "num": 58,
+    "region": "Right Accumbens area"
+}, {
+    "num": 60,
+    "region": "Right VentralDC"
+}]

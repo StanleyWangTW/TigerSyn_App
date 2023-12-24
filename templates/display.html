@@ -1,31 +1,48 @@
-{% extends "uploado.html" %}
+{% extends "upload.html" %}
 
-{% block show_image %}
-  <h1 class="text-center">{{img_fname}}</h1>
-  <p></p>
-  <h1 class="text-center">MRI Image</h1>
+{% block display %}
 
-  {{image_iframe|safe}}
+  <div class="b-example-divider"></div>
 
-  <hr>
-  <form method="POST" class="img-thumbnail">
-    <h3>選擇執行的模型：</h3>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="seg_model" id="flexRadioDefault1" value="SynthSeg" checked>
-      <label class="form-check-label" for="flexRadioDefault1">
-        SynthSeg
-      </label>
+  <div class="container col-xxl-8 px-4 py-5">
+
+    <div class="card">
+      <div class="card-body">
+        <h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">Uploaded MRI</h1>
+        <p class="card-text text-center">{{img_fname}}</p>
+      </div>
+
+      <div class="card-img text-center">
+        {{image_iframe|safe}}
+      </div>
+      
+      <form method="POST" class="img-thumbnail">
+        <div class="list-group list-group-radio d-grid gap-2 border-0">
+          <div class="position-relative">
+            <h1>選擇分割模型：</h1>
+          </div>
+
+          <div class="position-relative">
+            <input class="form-check-input position-absolute top-50 end-0 me-3 fs-5" type="radio" name="seg_model" id="listGroupRadioGrid1" value="SynthSeg" checked="">
+            <label class="list-group-item py-3 pe-5" for="listGroupRadioGrid1">
+              <strong class="fw-semibold">SynthSeg</strong>
+              <span class="d-block small opacity-75">切出全部的label</span>
+            </label>
+          </div>
+      
+          <div class="position-relative">
+            <input class="form-check-input position-absolute top-50 end-0 me-3 fs-5" type="radio" name="seg_model" id="listGroupRadioGrid2" value="Hippocampus">
+            <label class="list-group-item py-3 pe-5" for="listGroupRadioGrid2">
+              <strong class="fw-semibold">Hippocampus</strong>
+              <span class="d-block small opacity-75">只產生海馬迴的mask，但有更高的準確度</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary text-center" name="submit_button" value="select model">確定分割</button>
+        </div>
+      </form>
     </div>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="seg_model" id="flexRadioDefault2" value="Hippocampus">
-      <label class="form-check-label" for="flexRadioDefault2">
-        Hippocampus
-      </label>
-    </div>
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">確定分割</button>
-    </div>
-  </form>
+  </div>
 
   {% block show_mask %}{% endblock %}
 
