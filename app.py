@@ -1,5 +1,6 @@
 import os
 from os.path import join
+import atexit
 
 from flask import Flask, render_template, redirect, url_for
 from flask import request, session
@@ -27,75 +28,78 @@ labels = [
 ]
 
 
+@atexit.register
+def shutdown():
+    session.pop('img_fname', None)
+    session.pop('seg_model', None)
+
+
 @app.route('/')
 def home():
-    if 'patient_id' in session:
-        return redirect(url_for('upload', patient_id=session['patient_id']))
-    else:
-        return render_template('cover.html')
+    session.pop('img_fname', None)
+    session.pop('seg_model', None)
+    return render_template('cover.html')
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
     if request.method == 'POST':
-        patient_id = request.form['patient_id']
-        session['patient_id'] = patient_id
-        return redirect(url_for('upload', patient_id=patient_id))
-    else:
-        if 'patient_id' in session:
-            return redirect(url_for('upload', patient_id=session['patient_id']))
-        else:
-            return render_template('login.html')
+        file = request.files['file']
+        if '.nii' in file.filename:
+            session['img_fname'] = os.path.basename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
+            return redirect(url_for('show'))
 
-
-@app.route('/patient=<patient_id>', methods=['GET', 'POST'])
-def upload(patient_id):
-    if 'patient_id' in session:
-        if request.method == 'POST':
-            file = request.files['file']
-            if '.nii' in file.filename:
-                session['img_fname'] = os.path.basename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
-                return redirect(url_for('show', patient_id=session['patient_id']))
-
-        return render_template('upload.html')
-
-    else:
-        return redirect(url_for('home'))
+    return render_template('upload.html')
 
 
 @app.route('/logout')
 def logout():
-    session.pop('patient_id', None)
     return redirect(url_for('home'))
 
 
-@app.route("/patient=<patient_id>/show", methods=['GET', 'POST'])
-def show(patient_id):
+@app.route("/show", methods=['GET', 'POST'])
+def show():
     if 'img_fname' in session:
 
         if request.method == 'POST':
-            session['seg_model'] = request.form.get('seg_model')
-            return redirect(url_for('segmentation', patient_id=session['patient_id']))
+            if request.form['submit_button'] == 'upload file':
+                file = request.files['file']
+                if '.nii' in file.filename:
+                    session['img_fname'] = os.path.basename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
 
-        else:
-            raw_img_fname = session['img_fname']
-            html2 = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
-                                     False)
+            elif request.form['submit_button'] == 'select model':
+                session['seg_model'] = request.form.get('seg_model')
+                return redirect(url_for('segmentation'))
 
-            print('display')
-            return render_template('display.html', img_fname=raw_img_fname, image_iframe=html2)
+        raw_img_fname = session['img_fname']
+        html2 = tools.view1image(join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
+
+        return render_template('display.html', img_fname=raw_img_fname, image_iframe=html2)
 
     else:
         return redirect(url_for('home'))
 
 
-@app.route("/patient=<patient_id>/segmentation", methods=['GET', 'POST'])
-def segmentation(patient_id):
+@app.route("/segmentation", methods=['GET', 'POST'])
+def segmentation():
+    if request.method == 'POST':
+        if request.form['submit_button'] == 'upload file':
+            file = request.files['file']
+            if '.nii' in file.filename:
+                session['img_fname'] = os.path.basename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'))
+                return redirect(url_for('show'))
+
+        elif request.form['submit_button'] == 'select model':
+            session['seg_model'] = request.form.get('seg_model')
+            return redirect(url_for('segmentation'))
+
     if session['seg_model'] == 'SynthSeg':
         raw_img_fname = session['img_fname']
-        img_iframe = tools.view1image(os.path.join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'),
-                                      False)
+        img_iframe = tools.view1image(join(app.config['UPLOAD_FOLDER'], 'image.nii.gz'), False)
+
         # segmentation
         tigersyn.run('s', os.path.join(app.config['UPLOAD_FOLDER'], '*.nii.gz'), r'static')
         mask_iframe = tools.view1image(os.path.join('static', 'image_syn.nii.gz'), True)
@@ -114,6 +118,7 @@ def segmentation(patient_id):
                                image_iframe=img_iframe,
                                mask_iframe=mask_iframe,
                                options=tools.options,
+                               brainAge=brain_age,
                                vol_data=vol_data)
 
     if session['seg_model'] == 'Hippocampus':

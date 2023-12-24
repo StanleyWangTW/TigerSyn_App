@@ -11,8 +11,10 @@
             </h1>
             <p class="card-text text-center">{{img_fname}}</p>
         </div>
-
-        {{image_iframe|safe}}
+        <div class="card-img text-center">
+            {{image_iframe|safe}}
+        </div>
+        
 
         <form method="POST" class="img-thumbnail">
             <div class="list-group list-group-radio d-grid gap-2 border-0">
@@ -48,33 +50,20 @@
 
 <div class="b-example-divider"></div>
 
-<h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">Segmentation</h1>
-{{mask_iframe|safe}}
-
-<style>
-.ball {
-    width: 20px;
-    height: 20px;
-    background-color: red;
-    border-radius: 50%; /* 使其成為圓形 */
-    position: relative;
-}
-
-.text {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 40px; /* 調整文字與圓球的距離 */
-    font-size: 24px;
-    color: black;
-    white-space: nowrap;
-}
-</style>
-
-<div style="display: flex; justify-content: center;">
-    <div class="ball">
-        <p class="text">您的海馬迴體積為{{hippo_vol}}mm^3</p>
+<div class="card">
+    <div class="card-body">
+        <h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">
+            分割結果
+        </h1>
+        <h2 class="fs-2 text-center">您的海馬迴體積為{{hippo_vol}}mm<sup>3</sup></h2>
+    </div>
+    <div class="card-img text-center">
+        {{mask_iframe|safe}}
     </div>
 </div>
+{% endblock %}
 
+
+{% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

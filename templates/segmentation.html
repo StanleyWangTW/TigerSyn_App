@@ -40,9 +40,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-primary text-center">
-                    確定分割
-                </button>
+                <button type="submit" class="btn btn-primary text-center" name="submit_button" value="select model">確定分割</button>
             </div>
         </form>
     </div>
@@ -53,7 +51,7 @@
 <div class="card">
     <div class="card-body">
         <h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">
-            Segmentation
+            分割結果
         </h1>
     </div>
     <div class="card-img text-center">
@@ -62,44 +60,52 @@
 </div>
 
 <div class="b-example-divider"></div>
+  
+<div class="container col-xxl-8 px-4 py-5">
 
-<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2" id="dashboardTitle">Left Cerebral WM</h1>
-      <div class="btn-toolbar mb-2 mb-md-0">
-
-        <div class="dropdown">
-          <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            選擇腦區域
-          </button>
-          <ul class="dropdown-menu scrollable-menu" id="dataSelect" role="menu">
-            {% for option in options %}
-              <a class="dropdown-item" data-value="{{option.num}}">{{option.region}}</a>
-            {% endfor %}
-          </ul>
+    <main>
+        <!-- head -->
+        <!-- predict age result -->
+        <table class="table text-center table-borderless">
+            <tr>
+                <th scope="col" class="text-center fs-1" id="brainAge">您的腦齡為{{brainAge}}歲</th>
+                <th scope="col" class="text-center fs-1" id="volume"></th>
+                <th scope="col" class="text-center fs-1" id="averageVolume"></th>
+            </tr>
+        </table>
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="fw-bold text-body-emphasis" id="dashboardTitle">Left Cerebral WM</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        選擇大腦區域
+                    </button>
+                    <ul class="dropdown-menu scrollable-menu" id="dataSelect" role="menu">
+                        {% for option in options %}
+                            <a class="dropdown-item" data-value="{{option.num}}">{{option.region}}</a>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
-        
-      </div>
-    </div>
 
-    <!-- chart -->
-    <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+        <!-- chart -->
+        <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
 
-    <!-- table -->
-    <h2>Section title</h2>
-    <div class="table-responsive small">
-        <table class="table table-striped table-sm">
+        <!-- table -->
+        <table class="table table-striped table-hover table-sm">
             <thead>
                 <tr>
                     <th scope="col">大腦區域</th>
-                    <th scope="col">你的體積</th>
-                    <th scope="col">IXI平均體積</th>
+                    <th scope="col">你的體積(mm<sup>3</sup>)</th>
+                    <th scope="col">IXI平均體積(mm<sup>3</sup>)</th>
+                    <th scope="col">你的體積 / IXI平均體積</th>
                 </tr>
             </thead>
-            <tbody id="tableBody"></tbody>
+            <tbody class="table-group-divider" id="tableBody"></tbody>
         </table>
-    </div>
-</main>
+    </main>
+</div>
 {% endblock %}
 
 
@@ -158,7 +164,7 @@ const ctx = document.getElementById('myChart');
 age_chart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79'],
+        labels: ['0-29', '30-39', '40-49', '50-59', '60-69', '70-79'],
         datasets: [
             {
                 label: '各年齡層的組織體積',
@@ -184,17 +190,57 @@ age_chart = new Chart(ctx, {
         ]
     },
     options: {
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Age (years old)',
+                    color: 'white',
+                    font: {
+                        size: 24 
+                    }
+                },
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: '大腦組織體積 (mm^3)',
+                    color: 'white',
+                    font: {
+                        size: 24 
+                    }
+                },
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+        },
         plugins: {
             legend: {
                 display: true,
                 labels: {
+                    color: 'white',
                     font: {
                         size: 24
                     }
                 }
             },
             tooltip: {
-                boxPadding: 3
+                boxPadding: 3,
+                bodyFont: {
+                    size: 18
+                }
             }
         }
     }
@@ -208,6 +254,8 @@ dropdown.addEventListener('click', function(event) {
         return element.num === parseInt(event.target.getAttribute('data-value'));
     })
 
+    document.getElementById("volume").innerHTML = `您的腦組織體積為${data[i].vol}mm<sup>3</sup>`;
+    document.getElementById("averageVolume").innerHTML = `同年齡層腦組織體積為${data[i].avg_vol[data[i].age_range]}mm<sup>3</sup>`;
     document.getElementById("dashboardTitle").textContent = options[i].region;
     age_chart.data.datasets[0].data = data[i].avg_vol;
     age_chart.data.datasets[1].data = get_diagram_point(data, i);
@@ -215,6 +263,9 @@ dropdown.addEventListener('click', function(event) {
 })
 
 function updateTable(data) {
+    document.getElementById("volume").innerHTML = `您的腦組織體積為${data[0].vol}mm<sup>3</sup>`;
+    document.getElementById("averageVolume").innerHTML = `同年齡層腦組織體積為${data[0].avg_vol[data[0].age_range]}mm<sup>3</sup>`;
+
     var table = document.getElementById('tableBody')
 
     table.innerHTML = ''
@@ -224,6 +275,7 @@ function updateTable(data) {
                         <td>${options[i].region}</td>
                         <td>${data[i].vol}</td>
                         <td>${data[i].avg_vol[data[i].age_range]}</td>
+                        <td>${(data[i].vol / data[i].avg_vol[data[i].age_range] * 100).toFixed(1)} %</td>
                     </tr>`;
 
         table.innerHTML += row;
