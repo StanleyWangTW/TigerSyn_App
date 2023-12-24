@@ -1,0 +1,80 @@
+{% extends "upload.html" %}
+
+{% block display%}
+<div class="b-example-divider"></div>
+
+<div class="container col-xxl-8 px-4 py-5">
+    <div class="card">
+        <div class="card-body">
+            <h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">
+                Uploaded MRI
+            </h1>
+            <p class="card-text text-center">{{img_fname}}</p>
+        </div>
+
+        {{image_iframe|safe}}
+
+        <form method="POST" class="img-thumbnail">
+            <div class="list-group list-group-radio d-grid gap-2 border-0">
+                <div class="position-relative">
+                    <h1>選擇分割模型：</h1>
+                </div>
+
+                <div class="position-relative">
+                    <input class="form-check-input position-absolute top-50 end-0 me-3 fs-5" type="radio"
+                        name="seg_model" id="listGroupRadioGrid1" value="SynthSeg" checked="" />
+                    <label class="list-group-item py-3 pe-5" for="listGroupRadioGrid1">
+                        <strong class="fw-semibold">SynthSeg</strong>
+                        <span class="d-block small opacity-75">切出全部的label</span>
+                    </label>
+                </div>
+
+                <div class="position-relative">
+                    <input class="form-check-input position-absolute top-50 end-0 me-3 fs-5" type="radio"
+                        name="seg_model" id="listGroupRadioGrid2" value="Hippocampus" />
+                    <label class="list-group-item py-3 pe-5" for="listGroupRadioGrid2">
+                        <strong class="fw-semibold">Hippocampus</strong>
+                        <span class="d-block small opacity-75">只產生海馬迴的mask，但有更高的準確度</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary text-center">
+                    確定分割
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="b-example-divider"></div>
+
+<h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">Segmentation</h1>
+{{mask_iframe|safe}}
+
+<style>
+.ball {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    border-radius: 50%; /* 使其成為圓形 */
+    position: relative;
+}
+
+.text {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 40px; /* 調整文字與圓球的距離 */
+    font-size: 24px;
+    color: black;
+    white-space: nowrap;
+}
+</style>
+
+<div style="display: flex; justify-content: center;">
+    <div class="ball">
+        <p class="text">您的海馬迴體積為{{hippo_vol}}mm^3</p>
+    </div>
+</div>
+
+{% endblock %}

@@ -11,8 +11,10 @@
             </h1>
             <p class="card-text text-center">{{img_fname}}</p>
         </div>
-
-        {{image_iframe|safe}}
+        <div class="card-img text-center">
+            {{image_iframe|safe}}
+        </div>
+        
 
         <form method="POST" class="img-thumbnail">
             <div class="list-group list-group-radio d-grid gap-2 border-0">
@@ -48,7 +50,185 @@
 
 <div class="b-example-divider"></div>
 
-<h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">Segmentation</h1>
-{{mask_iframe|safe}}
+<div class="card">
+    <div class="card-body">
+        <h1 class="display-5 text-center fw-bold text-body-emphasis lh-1 mb-3">
+            Segmentation
+        </h1>
+    </div>
+    <div class="card-img text-center">
+        {{mask_iframe|safe}}
+    </div>
+</div>
 
+<div class="b-example-divider"></div>
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2" id="dashboardTitle">Left Cerebral WM</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+
+        <div class="dropdown">
+          <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            選擇腦區域
+          </button>
+          <ul class="dropdown-menu scrollable-menu" id="dataSelect" role="menu">
+            {% for option in options %}
+              <a class="dropdown-item" data-value="{{option.num}}">{{option.region}}</a>
+            {% endfor %}
+          </ul>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- chart -->
+    <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+
+    <!-- table -->
+    <h2>Section title</h2>
+    <div class="table-responsive small">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">大腦區域</th>
+                    <th scope="col">你的體積</th>
+                    <th scope="col">IXI平均體積</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</main>
+{% endblock %}
+
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+var data = {{vol_data|safe}};
+var options = [
+  {"num": 2, "region": "Left Cerebral WM"},
+  {"num": 3, "region": "Left Cerebral Cortex"},
+  {"num": 4, "region": "Left Lateral Ventricle"},
+  {"num": 5, "region": "Left Inf Lat Vent"},
+  {"num": 7, "region": "Left Cerebellum WM"},
+  {"num": 8, "region": "Left Cerebellum Cortex"},
+  {"num": 10, "region": "Left Thalamus"},
+  {"num": 11, "region": "Left Caudate"},
+  {"num": 12, "region": "Left Putamen"},
+  {"num": 13, "region": "Left Pallidum"},
+  {"num": 14, "region": "3rd Ventricle"},
+  {"num": 15, "region": "4th Ventricle"},
+  {"num": 16, "region": "Brain Stem"},
+  {"num": 17, "region": "Left Hippocampus"},
+  {"num": 18, "region": "Left Amygdala"},
+  {"num": 26, "region": "CSF"},
+  {"num": 28, "region": "Left Accumbens area"},
+  {"num": 41, "region": "Right Cerebral WM"},
+  {"num": 42, "region": "Right Cerebral Cortex"},
+  {"num": 43, "region": "Right Lateral Ventricle"},
+  {"num": 44, "region": "Right Inf Lat Vent"},
+  {"num": 46, "region": "Right Cerebellum WM"},
+  {"num": 47, "region": "Right Cerebellum Cortex"},
+  {"num": 49, "region": "Right Thalamus"},
+  {"num": 50, "region": "Right Caudate"},
+  {"num": 51, "region": "Right Putamen"},
+  {"num": 52, "region": "Right Pallidum"},
+  {"num": 53, "region": "Right Hippocampus"},
+  {"num": 54, "region": "Right Amygdala"},
+  {"num": 58, "region": "Right Accumbens area"},
+  {"num": 60, "region": "Right VentralDC"}
+]
+
+function get_diagram_point(data, vol_index) {
+    var point = [null, null, null, null, null, null]
+    point[data[vol_index].age_range] = data[vol_index].avg_vol[data[vol_index].age_range]
+
+    console.log(point[data[vol_index].age_range])
+    console.log(data[vol_index].age_range)
+    return point
+}
+
+
+const ctx = document.getElementById('myChart');
+age_chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['20-29', '30-39', '40-49', '50-59', '60-69', '70-79'],
+        datasets: [
+            {
+                label: '各年齡層的組織體積',
+                data: data[0].avg_vol,
+                lineTension: 0,
+                backgroundColor: 'transparent',
+                borderColor: '#007bff',
+                borderWidth: 4,
+                pointBackgroundColor: '#007bff'
+            },
+            {
+                label: '您的組織體積',
+                data: get_diagram_point(data, 0),
+                lineTension: 0,
+                borderWidth: 0,
+                pointRadius: 8,
+                backgroundColor: 'transparent',
+                borderColor: 'red',
+                borderWidth: 4,
+                pointBackgroundColor: 'red',
+                pointBorderColor: 'red'
+            },
+        ]
+    },
+    options: {
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    font: {
+                        size: 24
+                    }
+                }
+            },
+            tooltip: {
+                boxPadding: 3
+            }
+        }
+    }
+});
+
+const dropdown = document.getElementById('dataSelect');
+dropdown.addEventListener('click', function(event) {
+    event.preventDefault();
+
+    var i = options.findIndex(function(element) {
+        return element.num === parseInt(event.target.getAttribute('data-value'));
+    })
+
+    document.getElementById("dashboardTitle").textContent = options[i].region;
+    age_chart.data.datasets[0].data = data[i].avg_vol;
+    age_chart.data.datasets[1].data = get_diagram_point(data, i);
+    age_chart.update();
+})
+
+function updateTable(data) {
+    var table = document.getElementById('tableBody')
+
+    table.innerHTML = ''
+
+    for (var i=0; i < data.length; i++) {
+        var row =   `<tr>
+                        <td>${options[i].region}</td>
+                        <td>${data[i].vol}</td>
+                        <td>${data[i].avg_vol[data[i].age_range]}</td>
+                    </tr>`;
+
+        table.innerHTML += row;
+    }
+}
+
+updateTable(data)
+</script>
 {% endblock %}
