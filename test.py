@@ -35,4 +35,9 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    import nibabel as nib
+    img = nib.load(r'static\image_syn.nii.gz').get_fdata()
+    import matplotlib.pyplot as plt
+    plt.imshow((img == 24)[100, :, :])
+    plt.show()
