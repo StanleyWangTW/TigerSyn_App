@@ -2,11 +2,79 @@
 
 {% block content %}
 <div class="container col-xxl-8 px-4 py-5">
-    <h1>76600 steps</h1>
-    <h1>T1w n=123 1mm3 0.811</h1>
-    <h1>T1w n=99 1mm3 9.042</h1>
-    <h1>T2w n=75 1mm3 4.831</h1>
-    <h1>T2w n=70 1mm3 4.483</h1>
-    <h1>T2w n=78 1mm3 4.583</h1>
+    <div class="text-center p-4">
+        <h1>76600 steps</h1>
+        <h1 class="text-center fw-bold">CANDI & OASIS(n=123, 1mm<sup>3</sup>)</h1>
+        <h1 class="text-center fw-bold">dice score: 0.811</h1>
+    </div>
+    <hr>
+    <div class="text-center px-4">
+        <h1 class="text-center fw-bold">SIMON C.V (1mm<sup>3</sup>)</h1>
+        <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+    </div>
 </div>
+
+<script>
+const labels = ['T1w(n=99)', 'T2w(n=75)', 'PD(n=70)', 'FLAIR(n=78)'];
+const data = {
+    labels: labels,
+    datasets: [{
+        data: [9.042, 4.831, 4.483, 4.583],
+        backgroundColor: [
+        'rgba(255, 99, 132)',
+        'rgba(255, 159, 64)',
+        'rgba(255, 205, 86)',
+        'rgba(75, 192, 192)',
+        ],
+        borderColor: [
+        'rgb(255, 99, 132)',
+        'rgb(255, 159, 64)',
+        'rgb(255, 205, 86)',
+        'rgb(75, 192, 192)',
+        ],
+        borderWidth: 1
+    }]
+};
+
+const config = {
+    type: 'bar',
+    data: data,
+    options: {
+        plugins: {
+            legend: {display: false},
+        },
+        scales: {
+            y: {
+                title: {
+                    display: true,
+                    text: 'C.V.(%)',
+                    color: 'white',
+                    font: {
+                        size: 24
+                    }
+                },
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14
+                    }
+                },
+                beginAtZero: true
+            },
+            x: {
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14
+                    }
+                }
+            }
+        }
+    },
+};
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    age_chart = new Chart(ctx, config);
+</script>
+
 {% endblock %}
